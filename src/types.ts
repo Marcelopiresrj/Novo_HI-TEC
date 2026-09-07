@@ -39,6 +39,7 @@ export interface InstagramPost {
   instagramUrl: string;
   whatsappMessage: string;
   createdAt?: string;
+  rawFile?: File;
 }
 
 export interface AdminAccount {

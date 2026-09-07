@@ -20,6 +20,7 @@ import { INSTAGRAM_POSTS, INSTAGRAM_URL } from './data/instagramData';
 import { InstagramPost, AdminSession, StoreSettings } from './types';
 import { subscribeToAuthChanges, logoutAdmin, DEFAULT_STORE_SETTINGS } from './utils/adminAuthentication';
 import { getFirebaseStoreSettings, getFirebasePosts, saveFirebasePost, deleteFirebasePost } from './lib/firebaseStore';
+import { saveMediaChunks, loadMediaChunks } from './lib/chunkStorage';
 import mobileTechBackground from './assets/images/hitech_consoles_bg_1788576459897.jpg';
 import desktopTechBackground from './assets/images/hitech_consoles_wide_1788576474194.jpg';
 
@@ -62,12 +63,26 @@ export default function App() {
     getFirebaseStoreSettings().then(setStoreSettings);
 
     // Load posts
-    getFirebasePosts().then(fetchedPosts => {
+    getFirebasePosts().then(async fetchedPosts => {
+      // Resolve chunked media URLs
+      const resolvedPosts = await Promise.all(fetchedPosts.map(async (post) => {
+        if (post.mediaUrl && post.mediaUrl.startsWith('chunked://')) {
+          const blobUrl = await loadMediaChunks(post.id);
+          if (blobUrl) {
+             return { 
+               ...post, 
+               mediaUrl: blobUrl, 
+               thumbnailUrl: post.type === 'photo' ? blobUrl : (post.thumbnailUrl.startsWith('blob:') ? 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop' : post.thumbnailUrl)
+             };
+          }
+        }
+        return post;
+      }));
+
       // Mesclar posts do Firebase com posts originais predefinidos
-      const allPosts = [...fetchedPosts, ...INSTAGRAM_POSTS];
+      const allPosts = [...resolvedPosts, ...INSTAGRAM_POSTS];
       
       const uniquePosts = Array.from(new Map(allPosts.map(p => [p.id, p])).values());
-
       setPosts(uniquePosts.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -114,10 +129,29 @@ export default function App() {
     }
     
     const postsArray = Array.isArray(newPosts) ? newPosts : [newPosts];
-    const postsToSave = postsArray.map((p, index) => ({ 
-      ...p, 
-      createdAt: new Date(Date.now() + index * 1000).toISOString()
-    }));
+    showToast(`Processando e salvando ${postsArray.length} arquivo(s) no servidor...`);
+    
+    const postsToSave: InstagramPost[] = [];
+    
+    for (let i = 0; i < postsArray.length; i++) {
+        const p = postsArray[i];
+        let mediaUrl = p.mediaUrl;
+        
+        if (p.rawFile) {
+            try {
+               mediaUrl = await saveMediaChunks(p.id, p.rawFile);
+            } catch(e) {
+               console.error("Failed to chunk file", e);
+            }
+        }
+        
+        postsToSave.push({
+           ...p,
+           mediaUrl,
+           rawFile: undefined,
+           createdAt: new Date(Date.now() + i * 1000).toISOString()
+        });
+    }
 
     setPosts(prev => {
       const updated = [...postsToSave, ...prev];
@@ -131,6 +165,7 @@ export default function App() {
 
     try {
       await Promise.all(postsToSave.map(p => saveFirebasePost(p)));
+      showToast('Upload concluído com sucesso!');
     } catch (err) {
       console.error('Error saving posts to Firebase', err);
       showToast('Erro ao salvar no servidor.');
