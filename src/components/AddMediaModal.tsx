@@ -7,7 +7,7 @@ import { INSTAGRAM_URL } from '../data/instagramData';
 interface AddMediaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddPost: (post: InstagramPost) => void;
+  onAddPost: (post: InstagramPost | InstagramPost[]) => void;
   onShowToast: (msg: string) => void;
 }
 
@@ -19,6 +19,7 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
 }) => {
   const [mediaType, setMediaType] = useState<'video' | 'photo'>('video');
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
+  const [mediaItems, setMediaItems] = useState<{url: string, type: 'video'|'photo', thumbnail: string}[]>([]);
   const [fileUrl, setFileUrl] = useState<string>('');
   const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
   const [title, setTitle] = useState<string>('');
@@ -33,32 +34,29 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleFile = (file: File) => {
+    const handleFiles = (files: FileList | File[]) => {
     setError(null);
-    const isVideo = file.type.startsWith('video/');
-    const isImage = file.type.startsWith('image/');
+    const newItems: {url: string, type: 'video'|'photo', thumbnail: string}[] = [];
 
-    if (!isVideo && !isImage) {
-      setError('Por favor selecione um arquivo de vídeo (MP4, WebM) ou imagem (JPG, PNG).');
+    for (let i = 0; i < files.length; i++) {
+       const file = files[i];
+       const isVideo = file.type.startsWith('video/');
+       const isImage = file.type.startsWith('image/');
+       if (!isVideo && !isImage) continue;
+
+       const objectUrl = URL.createObjectURL(file);
+       newItems.push({
+         url: objectUrl,
+         type: isVideo ? 'video' : 'photo',
+         thumbnail: isImage ? objectUrl : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop'
+       });
+    }
+
+    if (newItems.length === 0) {
+      setError('Por favor selecione arquivos de vídeo (MP4) ou imagem (JPG, PNG).');
       return;
     }
-
-    const detectedType = isVideo ? 'video' : 'photo';
-    setMediaType(detectedType);
-    if (isVideo) {
-      setCategory('reels');
-    }
-
-    const objectUrl = URL.createObjectURL(file);
-    setFileUrl(objectUrl);
-
-    // If image, set both media and thumbnail
-    if (isImage) {
-      setThumbnailUrl(objectUrl);
-    } else {
-      // For video thumbnail fallback
-      setThumbnailUrl('https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop');
-    }
+    setMediaItems(newItems);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -73,19 +71,25 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!title.trim()) {
       setError('Por favor, informe o título da postagem.');
       return;
     }
-    if (!fileUrl.trim()) {
-      setError('Por favor, envie um arquivo de vídeo/foto ou informe uma URL válida.');
+
+    const itemsToSubmit = uploadMode === 'url' 
+      ? (fileUrl.trim() ? [{ url: fileUrl.trim(), type: mediaType, thumbnail: thumbnailUrl.trim() || fileUrl.trim() }] : [])
+      : mediaItems;
+
+    if (itemsToSubmit.length === 0) {
+      setError('Por favor, envie ao menos um arquivo ou informe uma URL válida.');
       return;
     }
 
@@ -96,26 +100,26 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
       assistencia: 'Assistência 🛠️',
     };
 
-    const newPost: InstagramPost = {
-      id: `post-${Date.now()}`,
-      type: mediaType,
+    const newPosts = itemsToSubmit.map((item, idx) => ({
+      id: `post-${Date.now()}-${idx}`,
+      type: item.type,
       title: title.trim(),
       category,
       categoryLabel: categoryLabels[category],
-      mediaUrl: fileUrl.trim(),
-      thumbnailUrl: thumbnailUrl.trim() || fileUrl.trim(),
+      mediaUrl: item.url,
+      thumbnailUrl: item.thumbnail,
       likes: '1',
-      views: mediaType === 'video' ? '1 visualização' : undefined,
-      duration: mediaType === 'video' ? '0:15' : undefined,
+      views: item.type === 'video' ? '1 visualização' : undefined,
+      duration: item.type === 'video' ? '0:15' : undefined,
       caption: caption.trim() || `Confira essa novidade na Hi-Tech Eletrônicos!`,
       badge: badge.trim() || undefined,
       price: price.trim() || undefined,
       instagramUrl: INSTAGRAM_URL,
       whatsappMessage: `Olá Hi-Tech! Vi a publicação "${title.trim()}" no BioSite e gostaria de mais informações!`,
-    };
+    }));
 
-    onAddPost(newPost);
-    onShowToast(`${mediaType === 'video' ? 'Vídeo' : 'Foto'} adicionado com sucesso!`);
+    onAddPost(newPosts as any);
+    onShowToast(`${newPosts.length} ${newPosts.length > 1 ? 'mídias adicionadas' : 'mídia adicionada'} com sucesso!`);
     onClose();
   };
 
@@ -229,13 +233,20 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
             {/* Drop Zone or URL Input */}
             {uploadMode === 'file' ? (
               <div>
+                <div className="mb-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-200/90 leading-relaxed">
+                    <strong className="text-amber-400">Atenção:</strong> Arquivos enviados por aqui ficam salvos apenas no seu dispositivo (temporariamente). Para que todos os seus clientes consigam ver as mídias permanentemente, prefira usar a opção <strong className="text-white">"Link / URL"</strong>.
+                  </p>
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="video/*,image/*"
+                  multiple
                   onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFile(e.target.files[0]);
+                    if (e.target.files && e.target.files.length > 0) {
+                      handleFiles(e.target.files);
                     }
                   }}
                   className="hidden"

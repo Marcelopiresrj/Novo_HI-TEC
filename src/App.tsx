@@ -63,13 +63,16 @@ export default function App() {
 
     // Load posts
     getFirebasePosts().then(fetchedPosts => {
-      if (fetchedPosts.length > 0) {
-        // Sort posts by createdAt descending
-        setPosts(fetchedPosts.sort((a, b) => {
-          if (!a.createdAt || !b.createdAt) return 0;
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }));
-      }
+      // Mesclar posts do Firebase com posts originais predefinidos
+      const allPosts = [...fetchedPosts, ...INSTAGRAM_POSTS];
+      
+      const uniquePosts = Array.from(new Map(allPosts.map(p => [p.id, p])).values());
+
+      setPosts(uniquePosts.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      }));
     });
 
     return () => unsubscribe();
@@ -104,17 +107,30 @@ export default function App() {
     setIsAddMediaOpen(true);
   };
 
-  const handleAddPost = async (newPost: InstagramPost) => {
+  const handleAddPost = async (newPosts: InstagramPost | InstagramPost[]) => {
     if (!isAdmin) {
       showToast('Apenas administradores podem publicar mídias.');
       return;
     }
-    // ensure createdAt exists for sorting
-    const postToSave = { ...newPost, createdAt: new Date().toISOString() };
-    const updated = [postToSave, ...posts];
-    setPosts(updated);
+    
+    const postsArray = Array.isArray(newPosts) ? newPosts : [newPosts];
+    const postsToSave = postsArray.map((p, index) => ({ 
+      ...p, 
+      createdAt: new Date(Date.now() + index * 1000).toISOString()
+    }));
+
+    setPosts(prev => {
+      const updated = [...postsToSave, ...prev];
+      const unique = Array.from(new Map(updated.map(p => [p.id, p])).values());
+      return unique.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+    });
+
     try {
-      await saveFirebasePost(postToSave);
+      await Promise.all(postsToSave.map(p => saveFirebasePost(p)));
     } catch (err) {
       console.error('Error saving posts to Firebase', err);
       showToast('Erro ao salvar no servidor.');
