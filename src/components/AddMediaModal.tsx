@@ -31,6 +31,22 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  React.useEffect(() => {
+    if (isOpen) {
+      setMediaType('video');
+      setUploadMode('file');
+      setMediaItems([]);
+      setFileUrl('');
+      setThumbnailUrl('');
+      setTitle('');
+      setCategory('reels');
+      setPrice('');
+      setCaption('');
+      setBadge('🔥 Novo');
+      setError(null);
+    }
+  }, [isOpen]);
+
 
   if (!isOpen) return null;
 
@@ -139,7 +155,8 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
       badge: badge.trim() || undefined,
       price: price.trim() || undefined,
       instagramUrl: INSTAGRAM_URL,
-      whatsappMessage: `Olá Hi-Tech! Vi a publicação "${title.trim()}" no BioSite e gostaria de mais informações!`,
+      whatsappMessage: `Olá Hi-Tech! Vi a publicação "${title.trim()}" no BioSite e gostaria de mais informações!`, 
+      rawFile: (item as any).file,
     }));
 
     onAddPost(newPosts as any);
@@ -267,6 +284,7 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
                     if (e.target.files && e.target.files.length > 0) {
                       handleFiles(e.target.files);
                     }
+                    e.target.value = '';
                   }}
                   className="hidden"
                 />
