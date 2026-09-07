@@ -35,7 +35,7 @@ service cloud.firestore {
         && data.email is string && data.email.size() <= 150
         && data.role is string && data.role in ['master', 'admin']
         && data.createdAt is string
-        && (data.updatedAt == null || data.updatedAt is string);
+        && (!('updatedAt' in data) || data.updatedAt is string);
     }
 
     function isValidStoreSettings(data) {
@@ -48,7 +48,7 @@ service cloud.firestore {
         && data.status is string && data.status.size() <= 50
         && data.hours is string && data.hours.size() <= 100
         && data.address is string && data.address.size() <= 200
-        && (data.updatedAt == null || data.updatedAt is string);
+        && (!('updatedAt' in data) || data.updatedAt is string);
     }
 
     function isValidPost(data) {
@@ -64,10 +64,10 @@ service cloud.firestore {
         && data.instagramUrl is string && data.instagramUrl.size() <= 1000
         && data.whatsappMessage is string && data.whatsappMessage.size() <= 500
         && data.createdAt is string
-        && (data.views == null || (data.views is string && data.views.size() <= 20))
-        && (data.duration == null || (data.duration is string && data.duration.size() <= 20))
-        && (data.badge == null || (data.badge is string && data.badge.size() <= 50))
-        && (data.price == null || (data.price is string && data.price.size() <= 50));
+        && (!('views' in data) || (data.views is string && data.views.size() <= 20))
+        && (!('duration' in data) || (data.duration is string && data.duration.size() <= 20))
+        && (!('badge' in data) || (data.badge is string && data.badge.size() <= 50))
+        && (!('price' in data) || (data.price is string && data.price.size() <= 50));
     }
 
     match /users/{userId} {
