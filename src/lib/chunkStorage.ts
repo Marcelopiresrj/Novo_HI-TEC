@@ -3,7 +3,7 @@ import { db } from './firebase';
 
 export async function saveMediaChunks(postId: string, file: File): Promise<string> {
   // If it's a small file, just return base64
-  if (file.size < 800 * 1024) {
+  if (file.size < 400 * 1024) {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -12,7 +12,7 @@ export async function saveMediaChunks(postId: string, file: File): Promise<strin
   }
 
   // Large file: chunk it
-  const chunkSize = 800 * 1024; // 800 KB
+  const chunkSize = 500 * 1024; // 800 KB
   const totalChunks = Math.ceil(file.size / chunkSize);
   const buffer = await file.arrayBuffer();
 

@@ -125,6 +125,16 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({
         className="flex gap-3 overflow-x-auto pt-1 pb-3 scroll-smooth snap-x snap-mandatory scrollbar-none"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
+        
+        {filteredPosts.length === 0 && (
+          <div className="w-full py-8 flex flex-col items-center justify-center text-center px-4">
+            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-500 mb-2">
+              <Camera className="w-6 h-6" />
+            </div>
+            <h3 className="text-white font-semibold text-sm">Nenhuma mídia encontrada</h3>
+            <p className="text-xs text-slate-400">Seus posts aparecerão aqui.</p>
+          </div>
+        )}
         {filteredPosts.map((post, idx) => {
           const itemWhatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(post.whatsappMessage)}`;
 

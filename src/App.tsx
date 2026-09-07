@@ -42,7 +42,7 @@ export default function App() {
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
   const isAdmin = Boolean(adminSession);
 
-  const [posts, setPosts] = useState<InstagramPost[]>(INSTAGRAM_POSTS);
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [activeFilter, setActiveFilter] = useState("todos");
 
   const filteredPosts = posts.filter(post => {
@@ -79,9 +79,9 @@ export default function App() {
         return post;
       }));
 
-      // Mesclar posts do Firebase com posts originais predefinidos
-      const allPosts = [...resolvedPosts, ...INSTAGRAM_POSTS];
       
+      // Apenas os posts salvos no banco de dados
+      const allPosts = [...resolvedPosts];
       const uniquePosts = Array.from(new Map(allPosts.map(p => [p.id, p])).values());
       setPosts(uniquePosts.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;

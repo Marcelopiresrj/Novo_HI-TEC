@@ -137,6 +137,16 @@ export const DesktopInstagramPanel: React.FC<DesktopInstagramPanelProps> = ({
 
       {/* Grid of Interactive Posts with Vertical Scrolling */}
       <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 gap-3.5 pt-1 relative z-10 max-h-[760px] scrollbar-thin">
+        
+        {filteredPosts.length === 0 && (
+          <div className="col-span-full py-12 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-500 mb-3">
+              <Camera className="w-8 h-8" />
+            </div>
+            <h3 className="text-white font-semibold mb-1">Nenhuma mídia encontrada</h3>
+            <p className="text-sm text-slate-400">As fotos e vídeos que você postar aparecerão aqui.</p>
+          </div>
+        )}
         {filteredPosts.map((post, idx) => {
           const itemWhatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(post.whatsappMessage)}`;
 
