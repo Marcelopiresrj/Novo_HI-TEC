@@ -188,7 +188,7 @@ export default function App() {
         />
       )}
 
-      <div className="flex-1 flex flex-col lg:flex-row items-center lg:items-start justify-center p-0 sm:p-6 md:p-8 lg:gap-8 relative z-10">
+      <div className="flex-1 flex flex-col lg:flex-row items-center lg:items-start justify-start lg:justify-center p-0 sm:p-6 md:p-8 lg:gap-8 relative z-10">
         {/* High-Tech Background Showcase: PS5, Xbox Series X/S, Smartphones, Boards & Tools */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
           {/* Deep dark cyber base */}
@@ -235,7 +235,7 @@ export default function App() {
           <div className="absolute inset-0 rounded-[44px] pointer-events-none border border-cyan-500/20 hidden sm:block"></div>
 
           {/* Top Status Bar (Cyber aesthetics) */}
-          <div className="w-full px-7 pt-3 pb-1 flex justify-between items-center text-[11px] font-semibold text-slate-400 select-none z-10">
+          <div className="hidden sm:flex w-full px-7 pt-3 pb-1 justify-between items-center text-[11px] font-semibold text-slate-400 select-none z-10">
             <span>Hi-Tech 5G</span>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -244,7 +244,7 @@ export default function App() {
           </div>
 
           {/* Quick Glass Transparency Control Switcher */}
-          <div className="w-full px-6 pt-1 flex items-center justify-between z-10 text-[10px]">
+          <div className="hidden sm:flex w-full px-6 pt-1 items-center justify-between z-10 text-[10px]">
             <button
               id="toggle-glass-opacity-btn"
               onClick={() => {
@@ -258,7 +258,6 @@ export default function App() {
               <Sparkles className="w-3 h-3 text-cyan-400" />
               <span>{glassOpacity === 'ultra' ? 'Fundo Nítido: Transparência Alta' : 'Fundo Suave: Vidro Fosco'}</span>
             </button>
-
             <a
               id="download-bg-img-btn"
               href={mobileTechBackground}
@@ -272,10 +271,10 @@ export default function App() {
           </div>
 
           {/* Top Speaker / Notch */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 sm:w-32 h-3.5 sm:h-4 bg-[#1E293B] rounded-b-xl z-20"></div>
+          <div className="hidden sm:block absolute top-0 left-1/2 -translate-x-1/2 w-28 sm:w-32 h-3.5 sm:h-4 bg-[#1E293B] rounded-b-xl z-20"></div>
 
           {/* Scrollable Main Content Interior */}
-          <div className="w-full px-4 sm:px-5 pt-8 pb-4 flex flex-col items-center">
+          <div className="w-full px-4 sm:px-5 pt-6 sm:pt-8 pb-8 flex flex-col items-center">
             {/* Profile / Header Section */}
             <HeaderProfile
               onCopyHandle={handleCopyHandle}
