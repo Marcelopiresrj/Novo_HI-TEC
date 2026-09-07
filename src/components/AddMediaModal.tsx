@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload, Video, Image as ImageIcon, Sparkles, AlertCircle, Play } from 'lucide-react';
 import { InstagramPost } from '../types';
 import { INSTAGRAM_URL } from '../data/instagramData';
+import { generateVideoThumbnail } from '../utils/videoUtils';
 
 interface AddMediaModalProps {
   isOpen: boolean;
@@ -50,60 +51,73 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
 
   if (!isOpen) return null;
 
-    const handleFiles = (files: FileList | File[]) => {
+    const handleFiles = async (rawFiles: FileList | File[]) => {
+    const files = Array.from(rawFiles);
     setError(null);
-    setMediaItems(prev => {
-      const newItems = [];
-      let currentVideos = prev.filter(p => p.type === 'video').length;
-      let currentPhotos = prev.filter(p => p.type === 'photo').length;
-      
-      for (let i = 0; i < files.length; i++) {
-         const file = files[i];
-         
-         
-         
-         
-                  let isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|webm|avi|mkv)$/i) !== null);
-         let isImage = file.type.startsWith('image/') || (file.name && file.name.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i) !== null);
-         
-         // Se o sistema do celular não detectar o tipo, forçamos o tipo que o usuário escolheu no botão
-         if (!isVideo && !isImage) {
-            if (mediaType === 'video') isVideo = true;
-            else isImage = true;
+    
+    // Pegar o estado atual para verificação de limites
+    let currentVideos = mediaItems.filter(p => p.type === 'video').length;
+    let currentPhotos = mediaItems.filter(p => p.type === 'photo').length;
+    
+    const newItems = [];
+    
+    for (let i = 0; i < files.length; i++) {
+       const file = files[i];
+       
+       let isVideo = (file.type && file.type.startsWith('video/')) || (file.name && file.name.match(/\.(mp4|mov|webm|avi|mkv)$/i) !== null);
+       let isImage = (file.type && file.type.startsWith('image/')) || (file.name && file.name.match(/\.(jpg|jpeg|png|gif|webp|heic)$/i) !== null);
+       
+       if (!isVideo && !isImage) {
+          if (mediaType === 'video') isVideo = true;
+          else isImage = true;
+       }
+       
+       if (isVideo) {
+         if (currentVideos >= 5) {
+           setError('Limite de 5 vídeos atingido.');
+           continue;
          }
-         
-         if (isVideo) {
-           if (currentVideos >= 5) {
-             setError('Limite de 5 vídeos atingido.');
-             continue;
+         currentVideos++;
+       }
+       
+       if (isImage) {
+         if (currentPhotos >= 10) {
+           setError('Limite de 10 fotos atingido.');
+           continue;
+         }
+         currentPhotos++;
+       }
+       
+       const objectUrl = URL.createObjectURL(file);
+       let thumbnail = objectUrl;
+       
+       if (isVideo) {
+         try {
+           const generatedThumb = await generateVideoThumbnail(file);
+           if (generatedThumb) {
+             thumbnail = generatedThumb;
+           } else {
+             thumbnail = 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop';
            }
-           currentVideos++;
+         } catch (e) {
+           thumbnail = 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop';
          }
-         
-         if (isImage) {
-           if (currentPhotos >= 10) {
-             setError('Limite de 10 fotos atingido.');
-             continue;
-           }
-           currentPhotos++;
-         }
-         
-         const objectUrl = URL.createObjectURL(file);
-         newItems.push({
-           url: objectUrl,
-           type: isVideo ? 'video' : 'photo',
-           thumbnail: isImage ? objectUrl : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop',
-           file: file // Save the file object for base64 conversion if needed
-         });
-      }
-      
-      if (newItems.length === 0 && !error) {
-        setError('Por favor selecione arquivos de vídeo (MP4) ou imagem (JPG, PNG).');
-        return prev;
-      }
-      
-      return [...prev, ...newItems];
-    });
+       }
+       
+       newItems.push({
+         url: objectUrl,
+         type: isVideo ? 'video' : 'photo',
+         thumbnail: thumbnail,
+         file: file
+       });
+    }
+    
+    if (newItems.length === 0 && !error) {
+      setError('Por favor selecione arquivos de vídeo (MP4) ou imagem (JPG, PNG).');
+      return;
+    }
+    
+    setMediaItems(prev => [...prev, ...newItems]);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -147,24 +161,29 @@ export const AddMediaModal: React.FC<AddMediaModalProps> = ({
       assistencia: 'Assistência 🛠️',
     };
 
-    const newPosts = itemsToSubmit.map((item, idx) => ({
-      id: `post-${Date.now()}-${idx}`,
-      type: item.type,
-      title: title.trim(),
-      category,
-      categoryLabel: categoryLabels[category],
-      mediaUrl: item.url,
-      thumbnailUrl: item.thumbnail,
-      likes: '1',
-      views: item.type === 'video' ? '1 visualização' : undefined,
-      duration: item.type === 'video' ? '0:15' : undefined,
-      caption: caption.trim() || `Confira essa novidade na Hi-Tech Eletrônicos!`,
-      badge: badge.trim() || undefined,
-      price: price.trim() || undefined,
-      instagramUrl: INSTAGRAM_URL,
-      whatsappMessage: `Olá Hi-Tech! Vi a publicação "${title.trim()}" no BioSite e gostaria de mais informações!`, 
-      rawFile: (item as any).file,
-    }));
+    const newPosts = itemsToSubmit.map((item, idx) => {
+      const p: any = {
+        id: `post-${Date.now()}-${idx}`,
+        type: item.type,
+        title: title.trim(),
+        category,
+        categoryLabel: categoryLabels[category as keyof typeof categoryLabels],
+        mediaUrl: item.url,
+        thumbnailUrl: item.thumbnail,
+        likes: '1',
+        caption: caption.trim() || `Confira essa novidade na Hi-Tech Eletrônicos!`,
+        instagramUrl: INSTAGRAM_URL,
+        whatsappMessage: `Olá Hi-Tech! Vi a publicação "${title.trim()}" no BioSite e gostaria de mais informações!`,
+        rawFile: (item as any).file,
+      };
+      if (item.type === 'video') {
+        p.views = '1 visualização';
+        p.duration = '0:15';
+      }
+      if (badge.trim()) p.badge = badge.trim();
+      if (price.trim()) p.price = price.trim();
+      return p;
+    });
 
     onAddPost(newPosts as any);
     onShowToast(`${newPosts.length} ${newPosts.length > 1 ? 'mídias adicionadas' : 'mídia adicionada'} com sucesso!`);

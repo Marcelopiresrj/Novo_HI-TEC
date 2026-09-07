@@ -115,7 +115,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                 </label>
                 <input
                   type="text"
-                  value={settings.specialtyTitle || ''}
+                  value={(settings || {}).specialtyTitle || ''}
                   onChange={(e) => setSettings({ ...settings, specialtyTitle: e.target.value })}
                   placeholder="Montagem e Manutenção de Celulares e Tablets • Venda de Games e Acessórios"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-cyan-400 outline-none"
@@ -128,7 +128,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                 </label>
                 <input
                   type="text"
-                  value={settings.servicesDescription || ''}
+                  value={(settings || {}).servicesDescription || ''}
                   onChange={(e) => setSettings({ ...settings, servicesDescription: e.target.value })}
                   placeholder="Troca de Telas, Touch, Conectores, Microfone, Baterias, Câmeras e Alto-falantes"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-cyan-400 outline-none"
@@ -151,7 +151,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   <input
                     type="text"
                     required
-                    value={settings.whatsappNumber}
+                    value={(settings || {}).whatsappNumber}
                     onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value.replace(/\D/g, '') })}
                     placeholder="5522998706841"
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-emerald-400 outline-none"
@@ -165,7 +165,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   <input
                     type="text"
                     required
-                    value={settings.whatsappDisplay}
+                    value={(settings || {}).whatsappDisplay}
                     onChange={(e) => setSettings({ ...settings, whatsappDisplay: e.target.value })}
                     placeholder="(22) 99870-6841"
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-emerald-400 outline-none"
@@ -181,7 +181,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   <MessageSquare className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
                   <input
                     type="text"
-                    value={settings.whatsappDefaultMsg}
+                    value={(settings || {}).whatsappDefaultMsg}
                     onChange={(e) => setSettings({ ...settings, whatsappDefaultMsg: e.target.value })}
                     placeholder="Olá, vim pelo BioSite..."
                     className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-emerald-400 outline-none"
@@ -204,7 +204,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                 <input
                   type="url"
                   required
-                  value={settings.instagramUrl}
+                  value={(settings || {}).instagramUrl}
                   onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value })}
                   placeholder="https://www.instagram.com/hitecheletronicos/"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-cyan-400 outline-none"
@@ -220,7 +220,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   <input
                     type="url"
                     required
-                    value={settings.googleReviewUrl}
+                    value={(settings || {}).googleReviewUrl}
                     onChange={(e) => setSettings({ ...settings, googleReviewUrl: e.target.value })}
                     placeholder="https://search.google.com/local/writereview?..."
                     className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-cyan-400 outline-none"
@@ -243,7 +243,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                 <input
                   type="text"
                   required
-                  value={settings.address}
+                  value={(settings || {}).address}
                   onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                   placeholder="Av. Jane Maria Martins Figueira, 12 - Jardim Marileia, Rio das Ostras - RJ, 28896-052"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-amber-400 outline-none"
@@ -257,7 +257,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   </label>
                   <input
                     type="text"
-                    value={settings.hoursWeekday}
+                    value={(settings || {}).hoursWeekday}
                     onChange={(e) => setSettings({ ...settings, hoursWeekday: e.target.value })}
                     placeholder="Segunda a Sexta: 09:00 às 18:30"
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-amber-400 outline-none"
@@ -270,7 +270,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   </label>
                   <input
                     type="text"
-                    value={settings.hoursSaturday}
+                    value={(settings || {}).hoursSaturday}
                     onChange={(e) => setSettings({ ...settings, hoursSaturday: e.target.value })}
                     placeholder="Sábado: 09:00 às 14:30"
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-amber-400 outline-none"
@@ -283,7 +283,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   </label>
                   <input
                     type="text"
-                    value={settings.hoursSunday || 'Domingo: Fechado'}
+                    value={(settings || {}).hoursSunday || 'Domingo: Fechado'}
                     onChange={(e) => setSettings({ ...settings, hoursSunday: e.target.value })}
                     placeholder="Domingo: Fechado"
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-amber-400 outline-none"
@@ -297,7 +297,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                 </label>
                 <input
                   type="text"
-                  value={settings.holidayNote || ''}
+                  value={(settings || {}).holidayNote || ''}
                   onChange={(e) => setSettings({ ...settings, holidayNote: e.target.value })}
                   placeholder="Em feriados os horários podem sofrer alterações"
                   className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-amber-400 outline-none"
@@ -319,7 +319,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   </label>
                   <input
                     type="text"
-                    value={settings.pixKey}
+                    value={(settings || {}).pixKey}
                     onChange={(e) => setSettings({ ...settings, pixKey: e.target.value })}
                     placeholder="22998706841"
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-cyan-400 outline-none"
@@ -332,7 +332,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
                   </label>
                   <input
                     type="text"
-                    value={settings.pixReceiver}
+                    value={(settings || {}).pixReceiver}
                     onChange={(e) => setSettings({ ...settings, pixReceiver: e.target.value })}
                     placeholder="Hi-Tech Eletrônicos"
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-cyan-400 outline-none"

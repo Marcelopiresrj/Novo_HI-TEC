@@ -61,10 +61,26 @@ export const InstagramMediaModal: React.FC<InstagramMediaModalProps> = ({
     setProgress((current / total) * 100);
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}?post=${post.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          text: `Confira: ${post.title} na Hi-Tech Eletrônicos!`,
+          url: shareUrl
+        });
+        return;
+      } catch (err) {
+        // User cancelled or failed
+      }
+    }
+    
+    // Fallback to clipboard
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(post.instagramUrl);
-      onShowToast('Link do Instagram copiado com sucesso!');
+      navigator.clipboard.writeText(shareUrl);
+      onShowToast('Link do post copiado com sucesso!');
     }
   };
 

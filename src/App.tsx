@@ -54,6 +54,23 @@ export default function App() {
   });
 
   // Load from Firebase
+  
+  // Check for deep link to a specific post
+  React.useEffect(() => {
+    if (posts.length > 0 && !selectedInstagramPost) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const postId = urlParams.get('post');
+      if (postId) {
+        const postToOpen = posts.find(p => p.id === postId);
+        if (postToOpen) {
+          setSelectedInstagramPost(postToOpen);
+          // Optional: Clean up URL after opening
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    }
+  }, [posts]);
+
   React.useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((session) => {
       setAdminSession(session);
@@ -158,8 +175,11 @@ export default function App() {
             if (p.rawFile) {
                 try {
                    mediaUrl = await saveMediaChunks(p.id, p.rawFile);
-                } catch(e) {
+                } catch(e: any) {
                    console.error("Failed to chunk file", e);
+                   if (e.message && e.message.includes('Quota limit exceeded')) {
+                       throw new Error('Quota limit exceeded');
+                   }
                 }
             }
             
@@ -173,16 +193,20 @@ export default function App() {
             const postToSave = {
                ...p,
                mediaUrl,
-               thumbnailUrl: finalThumbnailUrl,
-               rawFile: undefined
+               thumbnailUrl: finalThumbnailUrl
             };
+            delete postToSave.rawFile;
             
             await saveFirebasePost(postToSave);
         }
         showToast('Upload concluído com sucesso!');
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error saving posts to Firebase', err);
-        showToast('Erro ao salvar no servidor.');
+        if (err.message && err.message.includes('Quota limit exceeded')) {
+            showToast('⚠️ Limite gratuito diário do banco de dados (Firebase) atingido! Tente novamente amanhã.');
+        } else {
+            showToast('Erro ao salvar no servidor.');
+        }
     }
   };
 
@@ -466,6 +490,7 @@ export default function App() {
         {/* Admin Store Settings Modal */}
         <AdminStoreSettingsModal
           isOpen={isStoreSettingsOpen}
+          initialSettings={storeSettings}
           onClose={() => setIsStoreSettingsOpen(false)}
           onSave={(newSettings) => {
             setStoreSettings(newSettings);
