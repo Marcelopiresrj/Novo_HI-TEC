@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Play, Image as ImageIcon, ChevronLeft, ChevronRight, ExternalLink, Sparkles, Heart, Eye, ArrowRight, Plus, Trash2 } from 'lucide-react';
+import { Play, Camera, Image as ImageIcon, ChevronLeft, ChevronRight, ExternalLink, Sparkles, Heart, Eye, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { InstagramPost } from '../types';
 import { InstagramIcon, WhatsAppIcon } from './Icons';
 
