@@ -63,19 +63,7 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({
       <div className="flex items-center justify-end mb-3 px-1 gap-1">
         {/* Action button & Scroll Controls */}
         <div className="flex items-center gap-1.5">
-          {onOpenAddMedia && (
-            <button
-              id="open-add-media-mobile-btn"
-              onClick={onOpenAddMedia}
-              type="button"
-              className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-[#00F2FE] to-[#4FACFE] text-[#0B0F17] font-bold text-[11px] flex items-center gap-1 shadow-sm shadow-cyan-500/20 hover:brightness-110 transition-all cursor-pointer whitespace-nowrap"
-              title="Adicionar Novo Vídeo ou Foto"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span className="hidden xs:inline">Subir Mídia</span>
-              <span className="xs:hidden">Postar</span>
-            </button>
-          )}
+          
 
           <div className="flex items-center gap-1">
             <button
