@@ -54,7 +54,7 @@ export const HeaderProfile: React.FC<HeaderProfileProps> = ({
           whileHover={{ scale: 1.05, cursor: "grab" }}
           className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 w-[90px] h-[90px] sm:w-[120px] sm:h-[120px] z-20 drop-shadow-[0_10px_30px_rgba(0,242,254,0.3)] touch-none cursor-grab"
         >
-           <img src="/ps5.png" alt="PlayStation 5" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(0,242,254,0.4)] pointer-events-none select-none" draggable={false} />
+           <img src="/ps5.png" alt="PlayStation 5" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(0,242,254,0.4)] pointer-events-none select-none  " style={{ transformOrigin: 'center center' }} draggable={false} />
         </motion.div>
 
         {/* Right Side Floating Image (Xbox) */}
