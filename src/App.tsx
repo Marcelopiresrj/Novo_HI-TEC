@@ -19,8 +19,8 @@ import { WhatsAppIcon, OfficialWhatsAppIcon, GoogleIcon, InstagramIcon } from '.
 import { INSTAGRAM_POSTS, INSTAGRAM_URL } from './data/instagramData';
 import { InstagramPost, AdminSession, StoreSettings } from './types';
 import { subscribeToAuthChanges, logoutAdmin, DEFAULT_STORE_SETTINGS } from './utils/adminAuthentication';
-import { getFirebaseStoreSettings, getFirebasePosts, saveFirebasePost, deleteFirebasePost } from './lib/firebaseStore';
-import { saveMediaChunks, loadMediaChunks } from './lib/chunkStorage';
+import { getSupabaseStoreSettings, getSupabasePosts, saveSupabasePost, deleteSupabasePost, uploadMediaToSupabase } from './lib/supabaseStore';
+
 import mobileTechBackground from './assets/images/hitech_consoles_bg_1788576459897.jpg';
 import desktopTechBackground from './assets/images/hitech_consoles_wide_1788576474194.jpg';
 
@@ -53,7 +53,7 @@ export default function App() {
     return true;
   });
 
-  // Load from Firebase
+  // Load from Supabase
   
   // Check for deep link to a specific post
   React.useEffect(() => {
@@ -77,26 +77,11 @@ export default function App() {
     });
 
     // Load store settings
-    getFirebaseStoreSettings().then(setStoreSettings);
+    getSupabaseStoreSettings().then(setStoreSettings);
 
     // Load posts
-    getFirebasePosts().then(async fetchedPosts => {
-      // Resolve chunked media URLs
-      const resolvedPosts = await Promise.all(fetchedPosts.map(async (post) => {
-        if (post.mediaUrl && post.mediaUrl.startsWith('chunked://')) {
-          const blobUrl = await loadMediaChunks(post.id);
-          if (blobUrl) {
-             return { 
-               ...post, 
-               mediaUrl: blobUrl, 
-               thumbnailUrl: post.type === 'photo' ? blobUrl : (post.thumbnailUrl.startsWith('blob:') ? 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=600&auto=format&fit=crop' : post.thumbnailUrl)
-             };
-          }
-        }
-        return post;
-      }));
-
-      
+    getSupabasePosts().then(async fetchedPosts => {
+      const resolvedPosts = fetchedPosts;
       // Apenas os posts salvos no banco de dados
       const allPosts = [...resolvedPosts];
       const uniquePosts = Array.from(new Map(allPosts.map(p => [p.id, p])).values());
@@ -173,14 +158,7 @@ export default function App() {
             let mediaUrl = p.mediaUrl;
             
             if (p.rawFile) {
-                try {
-                   mediaUrl = await saveMediaChunks(p.id, p.rawFile);
-                } catch(e: any) {
-                   console.error("Failed to chunk file", e);
-                   if (e.message && e.message.includes('Quota limit exceeded')) {
-                       throw new Error('Quota limit exceeded');
-                   }
-                }
+                mediaUrl = await uploadMediaToSupabase(p.id, p.rawFile);
             }
             
             let finalThumbnailUrl = p.thumbnailUrl;
@@ -197,15 +175,18 @@ export default function App() {
             };
             delete postToSave.rawFile;
             
-            await saveFirebasePost(postToSave);
+            await saveSupabasePost(postToSave);
         }
         showToast('Upload concluído com sucesso!');
     } catch (err: any) {
-        console.error('Error saving posts to Firebase', err);
+        console.error('Error saving posts to Supabase', err);
         // Revert optimistic update by removing the newly added posts
         setPosts(prev => prev.filter(p => !optimisticPosts.find(op => op.id === p.id)));
-        if (err.message && err.message.includes('Quota limit exceeded')) {
-            showToast('⚠️ Limite gratuito diário do banco de dados (Firebase) atingido! Tente novamente amanhã.');
+        
+        if (err.message === 'SUPABASE_NOT_CONFIGURED') {
+            showToast('⚠️ Erro: As tabelas do Supabase não foram criadas! Rode o código SQL no seu painel do Supabase.');
+        } else if (err.message?.includes('row-level security policy') || err.code === '42501') {
+            showToast('⚠️ Permissão Negada (RLS)! Vá no Supabase > SQL Editor e rode o código que o assistente te enviou agora.');
         } else {
             showToast('Erro ao salvar no servidor. Upload cancelado.');
         }
@@ -220,10 +201,10 @@ export default function App() {
     const updated = posts.filter((p) => p.id !== postId);
     setPosts(updated);
     try {
-      await deleteFirebasePost(postId);
+      await deleteSupabasePost(postId);
       showToast('Publicação removida com sucesso!');
     } catch (err) {
-      console.error('Error deleting post from Firebase', err);
+      console.error('Error deleting post from Supabase', err);
       showToast('Erro ao remover do servidor.');
     }
     if (selectedInstagramPost?.id === postId) {

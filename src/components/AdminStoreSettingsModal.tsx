@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { StoreSettings } from '../types';
 import { DEFAULT_STORE_SETTINGS } from '../utils/adminAuthentication';
-import { saveFirebaseStoreSettings } from '../lib/firebaseStore';
+import { saveSupabaseStoreSettings } from '../lib/supabaseStore';
 
 interface AdminStoreSettingsModalProps {
   isOpen: boolean;
@@ -49,7 +49,7 @@ export const AdminStoreSettingsModal: React.FC<AdminStoreSettingsModalProps> = (
     e.preventDefault();
     setLoading(true);
     try {
-      await saveFirebaseStoreSettings(settings);
+      await saveSupabaseStoreSettings(settings);
       onSave(settings);
       onShowToast('Configurações e links da loja atualizados com sucesso!');
       onClose();

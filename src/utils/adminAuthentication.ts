@@ -1,13 +1,5 @@
 import { AdminAccount, AdminSession, StoreSettings } from '../types';
-import { auth, db } from '../lib/firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  sendPasswordResetEmail,
-  onAuthStateChanged
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   storeName: 'Hi-Tech Eletrônicos',
@@ -28,12 +20,8 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   pixReceiver: 'Hi-Tech Eletrônicos',
 };
 
-// O PIN de segurança mestre para criar novas contas de administrador. 
-// Você pode alterar este valor se desejar.
 export const MASTER_SECURITY_PIN = "123456";
 
-// Instead of checking length of accounts, check if a master exists by some mechanism.
-// For the sake of simplification and security, we'll assume first registration or specific email gets master.
 export async function registerAdmin(params: {
   name: string;
   email: string;
@@ -45,45 +33,34 @@ export async function registerAdmin(params: {
       return { success: false, error: 'O PIN de segurança está incorreto.' };
     }
 
-    const userCredential = await createUserWithEmailAndPassword(auth, params.email, params.password);
-    const user = userCredential.user;
-    
-    // Check if we want this to be master. For now, let's just make the user 'master' if they are the first or specific email
-    const role = 'master'; // Everyone registering through the UI initially is master for this demo, or we can enforce security rules.
-    
-    // Update 2026: Force push fix for Vercel deployment and permission errors
-    try {
-      await setDoc(doc(db, 'users', user.uid), {
-        name: params.name,
-        email: params.email,
-        role: role,
-        createdAt: new Date().toISOString(),
-      });
-    } catch (dbError: any) {
-      console.error("Database permission error after auth creation:", dbError);
-      // Clean up the auth user if DB write fails so they aren't stuck in "email already in use" limbo
-      try {
-        await user.delete();
-      } catch (e) {
-        console.error("Failed to cleanup user auth record after DB failure", e);
+    const role = 'master'; 
+    const { data, error } = await supabase.auth.signUp({
+      email: params.email,
+      password: params.password,
+      options: {
+        data: {
+          name: params.name,
+          role: role,
+        }
       }
-      throw new Error("Erro de permissão no banco de dados. Conta não foi criada.");
-    }
+    });
+
+    if (error) throw error;
+    if (!data.user) throw new Error("Erro desconhecido ao criar usuário");
+    if (!data.session) throw new Error("Por favor, desative a opção 'Confirm email' nas configurações do Supabase (Authentication -> Providers -> Email) para permitir o login automático, ou confirme o seu email.");
 
     return { 
-      success: true, 
-      session: {
-        user: { id: user.uid, name: params.name, email: params.email, role },
+       success: true, 
+       session: {
+        user: { id: data.user.id, name: params.name, email: params.email, role },
         loginTime: new Date().toISOString()
       } 
-    };
+     };
   } catch (error: any) {
     console.error("Registration error:", error);
     let errorMessage = error.message || error;
-    if (typeof errorMessage === 'string' && errorMessage.includes('email-already-in-use')) {
-      errorMessage = 'Este e-mail já está cadastrado! Vá na aba "Entrar" e tente fazer o login, ou exclua a conta no Console do Firebase.';
-    } else if (typeof errorMessage === 'string' && (errorMessage.includes('Missing or insufficient permissions') || errorMessage.includes('Erro de permissão'))) {
-      errorMessage = 'Erro de permissão no banco de dados (o Firebase ainda está atualizando as regras). Aguarde 1 minuto e tente novamente.';
+    if (typeof errorMessage === 'string' && errorMessage.toLowerCase().includes('already registered')) {
+      errorMessage = 'Este e-mail já está cadastrado! Vá na aba "Entrar" e tente fazer o login.';
     }
     return { success: false, error: errorMessage };
   }
@@ -94,33 +71,38 @@ export async function loginAdmin(
   password: string
 ): Promise<{ success: boolean; error?: string; session?: AdminSession }> {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
     
-    const role = userDoc.exists() ? userDoc.data().role : 'admin';
-    const name = userDoc.exists() ? userDoc.data().name : 'Admin';
+    const role = data.user?.user_metadata?.role || 'admin';
+    const name = data.user?.user_metadata?.name || 'Admin';
 
     return { 
-      success: true, 
-      session: {
-        user: { id: userCredential.user.uid, name, email, role },
+       success: true, 
+       session: {
+        user: { id: data.user.id, name, email, role },
         loginTime: new Date().toISOString()
       } 
-    };
+     };
   } catch (error: any) {
     return { success: false, error: 'Credenciais inválidas.' };
   }
 }
 
 export async function logoutAdmin(): Promise<void> {
-  await signOut(auth);
+  await supabase.auth.signOut();
 }
 
 export async function recoverPassword(
   email: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await sendPasswordResetEmail(auth, email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw error;
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -128,23 +110,22 @@ export async function recoverPassword(
 }
 
 export function subscribeToAuthChanges(callback: (session: AdminSession | null) => void) {
-  return onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const role = userDoc.exists() ? userDoc.data().role : 'admin';
-        const name = userDoc.exists() ? userDoc.data().name : 'Admin';
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session && session.user) {
+        const role = session.user.user_metadata?.role || 'admin';
+        const name = session.user.user_metadata?.name || 'Admin';
         
         callback({
-          user: { id: user.uid, name, email: user.email || '', role },
+          user: { id: session.user.id, name, email: session.user.email || '', role },
           loginTime: new Date().toISOString()
         });
-      } catch (e) {
-        callback(null);
-      }
     } else {
-      callback(null);
+        callback(null);
     }
   });
+  
+  // Return an unsubscribe function
+  return () => {
+    subscription.unsubscribe();
+  };
 }
-
