@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { InstagramFilterBar } from "./components/InstagramFilterBar";
+
 import { HeaderProfile } from './components/HeaderProfile';
 import { LinkCard } from './components/LinkCard';
 import { InstagramFeedSection } from './components/InstagramFeedSection';
@@ -43,15 +43,6 @@ export default function App() {
   const isAdmin = Boolean(adminSession);
 
   const [posts, setPosts] = useState<InstagramPost[]>([]);
-  const [activeFilter, setActiveFilter] = useState("todos");
-
-  const filteredPosts = posts.filter(post => {
-    if (activeFilter === "todos") return true;
-    if (activeFilter === "videos") return post.type === "video" || post.category === "reels";
-    if (activeFilter === "smartphones") return post.category === "smartphones";
-    if (activeFilter === "acessorios") return post.category === "acessorios";
-    return true;
-  });
 
   // Load from Supabase
   
@@ -339,15 +330,11 @@ export default function App() {
               storeSettings={storeSettings}
             />
 
-            {/* Instagram Filters */}
-            <InstagramFilterBar
-              activeFilter={activeFilter}
-              onFilterChange={setActiveFilter}
-            />
+
 
             {/* Interactive Instagram Feed Section with Horizontal Right-Scroll & Add/Delete Options */}
             <InstagramFeedSection
-              posts={filteredPosts}
+              posts={posts}
               onSelectPost={setSelectedInstagramPost}
               onOpenAddMedia={isAdmin ? handleOpenAddMedia : undefined}
               onDeletePost={isAdmin ? handleDeletePost : undefined}
@@ -409,7 +396,7 @@ export default function App() {
               </div>
               <a
                 id="google-review-badge-link"
-                href={googleReviewUrl}
+                href="https://www.google.com/search?q=hi+tech+eletronicos"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#00F2FE] hover:text-cyan-300 font-semibold underline underline-offset-2"
@@ -429,7 +416,7 @@ export default function App() {
 
         {/* Desktop Expansive Instagram Live Showcase Panel (side-by-side on desktop) */}
         <DesktopInstagramPanel
-          posts={filteredPosts}
+          posts={posts}
           onSelectPost={setSelectedInstagramPost}
           onOpenAddMedia={isAdmin ? handleOpenAddMedia : undefined}
           onDeletePost={isAdmin ? handleDeletePost : undefined}

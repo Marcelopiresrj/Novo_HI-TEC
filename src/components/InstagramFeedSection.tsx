@@ -58,7 +58,7 @@ export const InstagramFeedSection: React.FC<InstagramFeedSectionProps> = ({
   const phone = '5522998706841';
 
   return (
-    <section id="instagram-interactive-section" className="w-full my-4">
+    <section id="instagram-interactive-section" className="w-full mt-2 mb-4">
       {/* Section Header */}
       <div className="flex items-center justify-end mb-3 px-1 gap-1">
         {/* Action button & Scroll Controls */}

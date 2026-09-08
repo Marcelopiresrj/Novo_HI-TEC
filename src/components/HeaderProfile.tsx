@@ -47,9 +47,14 @@ export const HeaderProfile: React.FC<HeaderProfileProps> = ({
           initial={{ opacity: 0, x: -20, rotate: -5 }}
           animate={{ opacity: 1, x: 0, rotate: 0 }}
           transition={{ delay: 0.3, duration: 0.8, type: 'spring' }}
-          className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 w-[90px] h-[90px] sm:w-[120px] sm:h-[120px] z-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] pointer-events-none"
+          drag
+          dragConstraints={{ left: -40, right: 40, top: -40, bottom: 40 }}
+          dragElastic={0.4}
+          whileDrag={{ scale: 1.15, rotate: 10, cursor: "grabbing" }}
+          whileHover={{ scale: 1.05, cursor: "grab" }}
+          className="absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 w-[90px] h-[90px] sm:w-[120px] sm:h-[120px] z-20 drop-shadow-[0_10px_30px_rgba(0,242,254,0.3)] touch-none cursor-grab"
         >
-           <img src="/ps5.png" alt="PlayStation 5" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+           <img src="/ps5.png" alt="PlayStation 5" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(0,242,254,0.4)] pointer-events-none select-none" draggable={false} />
         </motion.div>
 
         {/* Right Side Floating Image (Xbox) */}
@@ -57,9 +62,14 @@ export const HeaderProfile: React.FC<HeaderProfileProps> = ({
           initial={{ opacity: 0, x: 20, rotate: 5 }}
           animate={{ opacity: 1, x: 0, rotate: 0 }}
           transition={{ delay: 0.4, duration: 0.8, type: 'spring' }}
-          className="absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 w-[90px] h-[90px] sm:w-[120px] sm:h-[120px] z-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] pointer-events-none"
+          drag
+          dragConstraints={{ left: -40, right: 40, top: -40, bottom: 40 }}
+          dragElastic={0.4}
+          whileDrag={{ scale: 1.15, rotate: -10, cursor: "grabbing" }}
+          whileHover={{ scale: 1.05, cursor: "grab" }}
+          className="absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 w-[90px] h-[90px] sm:w-[120px] sm:h-[120px] z-20 drop-shadow-[0_10px_30px_rgba(34,197,94,0.3)] touch-none cursor-grab"
         >
-           <img src="/xbox.png" alt="Xbox Series S" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+           <img src="/xbox.png" alt="Xbox Series S" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] pointer-events-none select-none" draggable={false} />
         </motion.div>
 
         <div className="relative p-1 rounded-full bg-gradient-to-tr from-[#00F2FE] via-[#7928CA] to-[#FF0080] shadow-[0_0_30px_rgba(0,242,254,0.4)] transition-transform duration-300 group-hover:scale-105 z-10">
@@ -78,7 +88,7 @@ export const HeaderProfile: React.FC<HeaderProfileProps> = ({
                   // Fallback for when the user hasn't uploaded their image yet
                   e.currentTarget.src = logoImg;
                 }}
-                className="w-[90%] h-[90%] object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]" 
+                className="w-full h-full object-contain scale-[1.05] drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]" 
               />
             </div>
           </div>
