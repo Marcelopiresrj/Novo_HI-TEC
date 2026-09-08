@@ -202,10 +202,12 @@ export default function App() {
         showToast('Upload concluído com sucesso!');
     } catch (err: any) {
         console.error('Error saving posts to Firebase', err);
+        // Revert optimistic update by removing the newly added posts
+        setPosts(prev => prev.filter(p => !optimisticPosts.find(op => op.id === p.id)));
         if (err.message && err.message.includes('Quota limit exceeded')) {
             showToast('⚠️ Limite gratuito diário do banco de dados (Firebase) atingido! Tente novamente amanhã.');
         } else {
-            showToast('Erro ao salvar no servidor.');
+            showToast('Erro ao salvar no servidor. Upload cancelado.');
         }
     }
   };
