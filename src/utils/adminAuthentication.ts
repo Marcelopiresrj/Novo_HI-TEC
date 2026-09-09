@@ -20,7 +20,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   pixReceiver: 'Hi-Tech Eletrônicos',
 };
 
-export const MASTER_SECURITY_PIN = "123456";
+export const MASTER_SECURITY_PIN = "069946";
 
 export async function registerAdmin(params: {
   name: string;
@@ -31,6 +31,18 @@ export async function registerAdmin(params: {
   try {
     if (params.pin.trim() !== MASTER_SECURITY_PIN) {
       return { success: false, error: 'O PIN de segurança está incorreto.' };
+    }
+    
+    // Simulate delay and return mock session if Supabase is not configured
+    if (!import.meta.env.VITE_SUPABASE_URL) {
+      await new Promise(r => setTimeout(r, 500));
+      return {
+        success: true,
+        session: {
+          user: { id: 'mock-id-' + Date.now(), name: params.name, email: params.email, role: 'master' },
+          loginTime: new Date().toISOString()
+        }
+      };
     }
 
     const role = 'master'; 
@@ -71,6 +83,17 @@ export async function loginAdmin(
   password: string
 ): Promise<{ success: boolean; error?: string; session?: AdminSession }> {
   try {
+    if (!import.meta.env.VITE_SUPABASE_URL) {
+      await new Promise(r => setTimeout(r, 500));
+      return {
+        success: true,
+        session: {
+          user: { id: 'mock-id-1', name: 'Admin', email, role: 'master' },
+          loginTime: new Date().toISOString()
+        }
+      };
+    }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,

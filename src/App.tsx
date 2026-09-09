@@ -20,6 +20,7 @@ import { INSTAGRAM_POSTS, INSTAGRAM_URL } from './data/instagramData';
 import { InstagramPost, AdminSession, StoreSettings } from './types';
 import { subscribeToAuthChanges, logoutAdmin, DEFAULT_STORE_SETTINGS } from './utils/adminAuthentication';
 import { getSupabaseStoreSettings, getSupabasePosts, saveSupabasePost, deleteSupabasePost, uploadMediaToSupabase } from './lib/supabaseStore';
+import { compressImage } from './utils/imageUtils';
 
 import mobileTechBackground from './assets/images/hitech_consoles_bg_1788576459897.jpg';
 import desktopTechBackground from './assets/images/hitech_consoles_wide_1788576474194.jpg';
@@ -149,7 +150,16 @@ export default function App() {
             let mediaUrl = p.mediaUrl;
             
             if (p.rawFile) {
-                mediaUrl = await uploadMediaToSupabase(p.id, p.rawFile);
+                let fileToUpload = p.rawFile;
+                // Only compress images, not videos
+                if (p.type === 'photo' && fileToUpload.type.startsWith('image/')) {
+                  try {
+                    fileToUpload = await compressImage(fileToUpload, 1920, 1080, 0.8);
+                  } catch (e) {
+                    console.error('Error compressing image:', e);
+                  }
+                }
+                mediaUrl = await uploadMediaToSupabase(p.id, fileToUpload);
             }
             
             let finalThumbnailUrl = p.thumbnailUrl;
